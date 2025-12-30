@@ -4,7 +4,7 @@
   "description": "디스코드 스터디 매니저 봇",
   "main": "dist/index.js",
   "scripts": {
-    "start": "ts-node src/index.ts",
+    "start": "node dist/index.js",
     "build": "tsc",
     "dev": "ts-node-dev --respawn src/index.ts",
     "deploy": "ts-node src/deploy-commands.ts",

@@ -10,6 +10,7 @@ import {
 } from "discord.js";
 import dotenv from "dotenv";
 import { startScheduledJobs } from "./scheduler";
+import http from "http";
 
 // .env 파일에서 환경 변수를 로드합니다.
 dotenv.config();
@@ -188,6 +189,26 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   }
 });
+
+/**
+ * Koyeb Health Check를 위한 간단한 웹 서버
+ */
+export function startHealthCheckServer() {
+  const port = 8080; // Koyeb 설정에서 지정할 포트 번호
+
+  http
+    .createServer((req, res) => {
+      // 어떤 경로로 들어오든 200 OK를 반환하여 봇이 살아있음을 알림
+      res.writeHead(200, { "Content-Type": "text/plain" });
+      res.write("OK");
+      res.end();
+    })
+    .listen(port, "0.0.0.0", () => {
+      console.log(`Health Check 서버가 포트 ${port}에서 작동 중입니다.`);
+    });
+}
+
+startHealthCheckServer();
 
 // .env 파일에서 가져온 토큰을 사용하여 Discord에 로그인합니다.
 client
