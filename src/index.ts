@@ -16,22 +16,19 @@ import http from "http";
  * 봇이 잠들지 않도록 자기 자신에게 신호를 보내는 함수
  */
 function keepAlive() {
-  const url = process.env.KOYEB_URL; // Koyeb에서 제공하는 앱의 URL
-
+  const url = process.env.KOYEB_URL;
   if (!url) {
     console.warn("KOYEB_URL이 설정되지 않아 Self-Ping을 시작할 수 없습니다.");
     return;
   }
 
-  // 3분(180,000ms)마다 실행
-  setInterval(() => {
-    http
-      .get(url, (res) => {
-        console.log(`Self-ping 보냄: 상태 코드 ${res.statusCode}`);
-      })
-      .on("error", (err) => {
-        console.error(`Self-ping 에러: ${err.message}`);
-      });
+  setInterval(async () => {
+    try {
+      const res = await fetch(url);
+      console.log(`Self-ping 성공: ${res.status}`);
+    } catch (err) {
+      console.error(`Self-ping 실패: ${err}`);
+    }
   }, 180000);
 }
 
