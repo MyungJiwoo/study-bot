@@ -8,6 +8,7 @@ import {
   TextChannel,
 } from "discord.js";
 import dotenv from "dotenv";
+import { startScheduledJobs } from "./scheduler";
 
 // .env 파일에서 환경 변수를 로드합니다.
 dotenv.config();
@@ -41,6 +42,11 @@ const client = new Client({
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`로그인 성공! ${readyClient.user.tag} (으)로 접속 완료!`);
   console.log("봇이 준비되었습니다. 달려봅시다!==");
+
+  // 스케줄러 시작
+  startScheduledJobs(client);
+  console.log("스케줄러가 시작되었습니다.");
+
   // 봇의 활동 상태를 설정합니다. 예: "메시지 기다리는 중" (WATCHING)
   // type: 0 (Playing), 1 (Streaming), 2 (Listening), 3 (Watching), 5 (Competing)
   readyClient.user.setActivity("메시지 기다리는 중", {
