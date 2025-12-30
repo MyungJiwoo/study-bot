@@ -1,5 +1,11 @@
 // src/index.ts
-import { Client, Events, GatewayIntentBits } from "discord.js";
+import {
+  Client,
+  Events,
+  GatewayIntentBits,
+  ChannelType,
+  TextChannel,
+} from "discord.js";
 import dotenv from "dotenv";
 
 // .env 파일에서 환경 변수를 로드합니다.
@@ -15,6 +21,9 @@ if (!token) {
   process.exit(1);
 }
 
+// 사용자별 스터디 시작 시간을 저장할 Map
+const studyTimers = new Map<string, Date>();
+
 // 새로운 디스코드 클라이언트 인스턴스를 생성합니다.
 // 인텐트(Intents)는 봇이 어떤 종류의 이벤트에 접근할 수 있는지를 명시합니다.
 const client = new Client({
@@ -22,6 +31,7 @@ const client = new Client({
     GatewayIntentBits.Guilds, // 서버 관련 이벤트 (봇 추가/제거, 서버 정보 변경 등)
     GatewayIntentBits.GuildMessages, // 서버 내 메시지 생성/수정/삭제 이벤트
     GatewayIntentBits.MessageContent, // 메시지의 내용을 읽기 위한 권한 (중요! Discord Developer Portal에서 활성화 필요)
+    GatewayIntentBits.GuildVoiceStates, // 음성 채널 관련 이벤트 감지를 위한 인텐트 추가
   ],
 });
 
@@ -53,6 +63,59 @@ client.on(Events.MessageCreate, async (message) => {
     message.channel.send(
       `안녕하세요, ${message.author.toString()}님! 반가워요.`
     );
+  }
+});
+
+// 음성 채널 상태 변경 이벤트를 감지합니다.
+client.on(Events.VoiceStateUpdate, (oldState, newState) => {
+  const user = newState.member?.user;
+  if (!user || user.bot) return; // 봇의 이벤트는 무시
+
+  const oldChannel = oldState.channel;
+  const newChannel = newState.channel;
+  const guild = newState.guild;
+  const studyRoomName = "스터디룸";
+  const logChannelName = "스터디-기록";
+
+  const logChannel = guild.channels.cache.find(
+    (channel) =>
+      channel.name === logChannelName && channel.type === ChannelType.GuildText
+  ) as TextChannel;
+  if (!logChannel) return; // 로그 채널이 없으면 아무것도 하지 않음
+
+  // 사용자가 '스터디룸'에 들어왔을 때
+  if (
+    newChannel?.name === studyRoomName &&
+    oldChannel?.name !== studyRoomName
+  ) {
+    studyTimers.set(user.id, new Date());
+    logChannel.send(`${user.toString()}님이 스터디룸에 입장했습니다!`);
+  }
+  // 사용자가 '스터디룸'에서 나갔을 때
+  else if (
+    oldChannel?.name === studyRoomName &&
+    newChannel?.name !== studyRoomName
+  ) {
+    const startTime = studyTimers.get(user.id);
+    if (startTime) {
+      const endTime = new Date();
+      const duration = endTime.getTime() - startTime.getTime(); // 밀리초 단위
+      const hours = Math.floor(duration / 3600000);
+      const minutes = Math.floor((duration % 3600000) / 60000);
+      const seconds = Math.floor((duration % 60000) / 1000);
+
+      const today = new Date();
+      const dateString = `${today.getFullYear()}.${
+        today.getMonth() + 1
+      }.${today.getDate()}`;
+      const startTimeString = startTime.toTimeString().slice(0, 5);
+      const endTimeString = endTime.toTimeString().slice(0, 5);
+
+      logChannel.send(
+        `[${dateString}] ${user.toString()}님이 ${hours}시간 ${minutes}분 ${seconds}초 동안 공부했습니다. (${startTimeString}~${endTimeString})`
+      );
+      studyTimers.delete(user.id);
+    }
   }
 });
 
