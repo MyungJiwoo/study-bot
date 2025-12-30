@@ -1,6 +1,8 @@
 import cron from "node-cron";
-import config from "./config.json";
+import dotenv from "dotenv";
 import { Client, TextChannel, EmbedBuilder } from "discord.js";
+
+dotenv.config();
 
 export function startScheduledJobs(client: Client) {
   // 개발 테스트
@@ -29,11 +31,19 @@ export function startScheduledJobs(client: Client) {
 // 일일 메시지 발송
 async function sendDailyMessage(client: Client) {
   try {
-    const channelId = config.DISCORD_CHANNEL_ID; // 실제 채널 ID로 변경
-    const channel = client.channels.cache.get(channelId) as TextChannel;
+    const targetChannelId = process.env.DISCORD_CHANNEL_ID;
+
+    if (!targetChannelId) {
+      console.error(
+        "오류: DISCORD_CHANNEL_ID가 .env 파일에 설정되어 있지 않습니다."
+      );
+      return;
+    }
+
+    const channel = client.channels.cache.get(targetChannelId) as TextChannel;
 
     if (!channel) {
-      console.log("채널을 찾을 수 없습니다.");
+      console.log(`채널을 찾을 수 없습니다. (ID: ${targetChannelId})`);
       return;
     }
 
