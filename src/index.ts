@@ -48,6 +48,9 @@ if (!token) {
 // 사용자별 스터디 시작 시간을 저장할 Map
 export const studyTimers = new Map<string, Date>();
 
+// 오늘 하루 누적 공부 시간 (추가) - [사용자ID: 누적밀리초]
+export const dailyCumulativeTime = new Map<string, number>();
+
 // 새로운 디스코드 클라이언트 인스턴스를 생성합니다.
 // 인텐트(Intents)는 봇이 어떤 종류의 이벤트에 접근할 수 있는지를 명시합니다.
 const client = new Client({
@@ -138,16 +141,41 @@ client.on(Events.VoiceStateUpdate, (oldState, newState) => {
     if (startTime) {
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime(); // 밀리초 단위
+
+      // 오늘 전체 누적 시간에 현재 공부한 시간 더하기
+      const currentTotal = dailyCumulativeTime.get(user.id) || 0;
+      dailyCumulativeTime.set(user.id, currentTotal + duration);
+
       const hours = Math.floor(duration / 3600000);
       const minutes = Math.floor((duration % 3600000) / 60000);
       const seconds = Math.floor((duration % 60000) / 1000);
 
       const today = new Date();
-      const dateString = `${today.getFullYear()}.${
-        today.getMonth() + 1
-      }.${today.getDate()}`;
-      const startTimeString = startTime.toTimeString().slice(0, 5);
-      const endTimeString = endTime.toTimeString().slice(0, 5);
+      // 한국 날짜 형식 (YYYY.MM.DD)
+      const dateString = today
+        .toLocaleDateString("ko-KR", {
+          timeZone: "Asia/Seoul",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        })
+        .replace(/\. /g, ".")
+        .replace(/\.$/, "");
+
+      // 한국 시간 형식 (HH:MM)
+      const startTimeString = startTime.toLocaleTimeString("ko-KR", {
+        timeZone: "Asia/Seoul",
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      const endTimeString = endTime.toLocaleTimeString("ko-KR", {
+        timeZone: "Asia/Seoul",
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 
       // logChannel.send(
       //   `[${dateString}] ${user.toString()}님이 ${hours}시간 ${minutes}분 ${seconds}초 동안 공부했습니다. (${startTimeString}~${endTimeString})`

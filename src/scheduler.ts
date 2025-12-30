@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import dotenv from "dotenv";
 import { Client, TextChannel, EmbedBuilder } from "discord.js";
+import { dailyCumulativeTime } from "./index";
 
 dotenv.config();
 
@@ -11,19 +12,33 @@ export function startScheduledJobs(client: Client) {
   // });
 
   // 매일 오전 10시에 일일 체크인 메시지
-  cron.schedule("0 10 * * *", async () => {
-    await sendDailyMessage(client);
-  });
+  cron.schedule(
+    "0 10 * * *",
+    async () => {
+      await sendDailyMessage(client);
+    },
+    {
+      timezone: "Asia/Seoul", // 한국 시간 기준으로 자정에 실행
+    }
+  );
 
   // 매일 자정에 서버 정리
-  cron.schedule("0 0 * * *", async () => {
-    console.log("일일 서버 정리 시작...");
+  cron.schedule(
+    "0 0 * * *",
+    async () => {
+      console.log("일일 서버 정리 시작...");
 
-    // 캐시 정리
-    client.users.cache.sweep((user) => user.id !== client.user?.id);
+      // 캐시 정리
+      client.users.cache.sweep((user) => user.id !== client.user?.id);
 
-    console.log("서버 정리 완료");
-  });
+      dailyCumulativeTime.clear();
+
+      console.log("서버 정리 완료");
+    },
+    {
+      timezone: "Asia/Seoul", // 한국 시간 기준으로 자정에 실행
+    }
+  );
 
   console.log("스케줄러가 시작되었습니다.");
 }
