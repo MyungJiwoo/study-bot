@@ -6,6 +6,7 @@ import {
   GatewayIntentBits,
   ChannelType,
   TextChannel,
+  EmbedBuilder,
 } from "discord.js";
 import dotenv from "dotenv";
 import { startScheduledJobs } from "./scheduler";
@@ -96,7 +97,15 @@ client.on(Events.VoiceStateUpdate, (oldState, newState) => {
     oldChannel?.name !== studyRoomName
   ) {
     studyTimers.set(user.id, new Date());
-    logChannel.send(`${user.toString()}님이 스터디룸에 입장했습니다!`);
+    // logChannel.send(`${user.toString()}님이 스터디룸에 입장했습니다!`);
+
+    const enterEmbed = new EmbedBuilder()
+      .setTitle("✏️ 스터디 시작")
+      .setDescription(`${user.toString()}님이 스터디룸에 입장했습니다!`)
+      .setColor(0x00ff00) // 초록색
+      .setTimestamp();
+
+    logChannel.send({ embeds: [enterEmbed] });
   }
   // 사용자가 '스터디룸'에서 나갔을 때
   else if (
@@ -118,9 +127,33 @@ client.on(Events.VoiceStateUpdate, (oldState, newState) => {
       const startTimeString = startTime.toTimeString().slice(0, 5);
       const endTimeString = endTime.toTimeString().slice(0, 5);
 
-      logChannel.send(
-        `[${dateString}] ${user.toString()}님이 ${hours}시간 ${minutes}분 ${seconds}초 동안 공부했습니다. (${startTimeString}~${endTimeString})`
-      );
+      // logChannel.send(
+      //   `[${dateString}] ${user.toString()}님이 ${hours}시간 ${minutes}분 ${seconds}초 동안 공부했습니다. (${startTimeString}~${endTimeString})`
+      // );
+      const exitEmbed = new EmbedBuilder()
+        .setTitle("🚀 스터디 종료")
+        .setThumbnail(user.displayAvatarURL()) // 유저 프로필 사진 추가
+        .addFields(
+          {
+            name: "📚 공부 시간",
+            value: `${hours}시간 ${minutes}분 ${seconds}초`,
+            inline: false,
+          },
+          {
+            name: "⏰ 진행 시간",
+            value: `${dateString} \`${startTimeString}\` ~ \`${endTimeString}\``,
+            inline: true,
+          }
+        )
+        .setColor(0x3498db) // 파란색
+        .setFooter({
+          text: `${user.username}님의 기록`,
+          iconURL: user.displayAvatarURL(),
+        })
+        .setTimestamp();
+
+      logChannel.send({ embeds: [exitEmbed] });
+
       studyTimers.delete(user.id);
     }
   }
