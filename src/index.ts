@@ -1,3 +1,4 @@
+import { commands } from "./commands/index";
 // src/index.ts
 import {
   Client,
@@ -39,7 +40,7 @@ const client = new Client({
 // readyClient는 로그인된 클라이언트, 즉 우리 봇 자신을 가리킵니다.
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`로그인 성공! ${readyClient.user.tag} (으)로 접속 완료!`);
-  console.log("봇이 준비되었습니다. 달려봅시다!");
+  console.log("봇이 준비되었습니다. 달려봅시다!==");
   // 봇의 활동 상태를 설정합니다. 예: "메시지 기다리는 중" (WATCHING)
   // type: 0 (Playing), 1 (Streaming), 2 (Listening), 3 (Watching), 5 (Competing)
   readyClient.user.setActivity("메시지 기다리는 중", {
@@ -115,6 +116,36 @@ client.on(Events.VoiceStateUpdate, (oldState, newState) => {
         `[${dateString}] ${user.toString()}님이 ${hours}시간 ${minutes}분 ${seconds}초 동안 공부했습니다. (${startTimeString}~${endTimeString})`
       );
       studyTimers.delete(user.id);
+    }
+  }
+});
+
+client.on(Events.InteractionCreate, async (interaction) => {
+  try {
+    // 슬래시 커맨드인지 확인합니다.
+    if (!interaction.isChatInputCommand()) return;
+
+    // commands 객체에서 명령어 이름으로 해당 명령어 모듈을 가져옵니다.
+    const command = commands[interaction.commandName as keyof typeof commands];
+
+    // 명령어가 존재하지 않으면 아무것도 하지 않습니다.
+    if (!command) {
+      console.error(
+        `No command matching ${interaction.commandName} was found.`
+      );
+      return;
+    }
+
+    // 명령어의 execute 함수를 실행합니다.
+    await command.execute(interaction);
+  } catch (error) {
+    console.error("Error handling interaction:", error);
+    // 사용자에게 오류 메시지를 보낼 수도 있습니다.
+    if (interaction.isRepliable()) {
+      await interaction.reply({
+        content: "명령어 실행 중 오류가 발생했습니다.",
+        ephemeral: true,
+      });
     }
   }
 });

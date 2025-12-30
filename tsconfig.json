@@ -9,8 +9,9 @@
     "strict": true, // 모든 엄격한 타입 검사 옵션을 활성화 (권장)
     "skipLibCheck": true, // 모든 의존성 라이브러리의 타입 검사를 건너뛰어 빌드 속도 향상
     "forceConsistentCasingInFileNames": true, // 파일 이름의 대소문자를 일관되게 사용하도록 강제
-    "moduleResolution": "node" // 모듈 해석 전략
+    "moduleResolution": "node", // 모듈 해석 전략
     // ...
+    "resolveJsonModule": true
   },
   "include": ["src/**/*"], // 컴파일할 파일들의 패턴 (src 폴더 아래 모든 .ts 파일)
   "exclude": ["node_modules", "**/*.spec.ts"] // 컴파일에서 제외할 파일/폴더
