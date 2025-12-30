@@ -46,7 +46,7 @@ if (!token) {
 }
 
 // 사용자별 스터디 시작 시간을 저장할 Map
-const studyTimers = new Map<string, Date>();
+export const studyTimers = new Map<string, Date>();
 
 // 새로운 디스코드 클라이언트 인스턴스를 생성합니다.
 // 인텐트(Intents)는 봇이 어떤 종류의 이벤트에 접근할 수 있는지를 명시합니다.
